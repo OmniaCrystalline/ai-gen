@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Card, Button } from "@radix-ui/themes";
-import { Github, Mail, Linkedin, Globe, Save } from "lucide-react";
 import { Link } from "react-router";
+import { FaGithub, FaMailBulk, FaLinkedin, FaGlobe, FaSave } from "react-icons/fa";
+
 
 
 function Portfolio() {
@@ -141,8 +142,8 @@ function Portfolio() {
                 <Card className="p-4 border border-gray-200">
                   <h3 className="text-xl font-semibold">{repo.name}</h3>
                   <p className="text-gray-600">{repo.description || "No description available"}</p>
-                  <p className="flex text-gray-600 gap-1 "><Globe /><Link className="text-gray-600 italic" to={repo.homepage} target="_blank">veiw homepage</Link></p>
-                  <p className="flex shrink-0 text-gray-600 gap-1"><Save /><Link className="text-gray-600 italic flex flex-wrap" to={repo.html_url} target="_blank">veiw on GitHub</Link></p>
+                  <p className="flex text-gray-600 gap-1 place-items-center"><FaGlobe /><Link className="text-gray-600 italic" to={repo.homepage} target="_blank">veiw homepage</Link></p>
+                  <p className="flex shrink-0 text-gray-600 gap-1 place-items-center"><FaSave /><Link className="text-gray-600 italic flex flex-wrap" to={repo.html_url} target="_blank">veiw on GitHub</Link></p>
                   <p className="text-sm text-gray-500 gap-1">Language: {repo.language || "Unknown"}</p>
                   <ul className="flex gap-4">{repo.topics.map(e => <li key={e}>{e}</li>)}</ul>
                 </Card>
@@ -182,13 +183,13 @@ function Portfolio() {
 
       <footer className="text-center space-x-4 flex justify-evenly">
         <Button variant="ghost" asChild>
-          <a href="https://github.com/OmniaCrystalline" target="_blank"><Github className="w-5 h-5" /></a>
+          <a href="https://github.com/OmniaCrystalline" target="_blank"><FaGithub className="w-5 h-5" /></a>
         </Button>
         <Button variant="ghost" asChild>
-          <a href="https://www.linkedin.com/in/vera-mospan/" target="_blank"><Linkedin className="w-5 h-5" /></a>
+          <a href="https://www.linkedin.com/in/vera-mospan/" target="_blank"><FaLinkedin className="w-5 h-5" /></a>
         </Button>
         <Button variant="ghost" asChild>
-          <a href="mailto:vp.mospan@gmail.com"><Mail className="w-5 h-5" /></a>
+          <a href="mailto:vp.mospan@gmail.com"><FaMailBulk className="w-5 h-5" /></a>
         </Button>
       </footer>
     </motion.div>
