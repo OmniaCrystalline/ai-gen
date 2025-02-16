@@ -7,12 +7,12 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
-    
   },
   "dependencies": {
     "@radix-ui/themes": "^3.2.0",
     "@react-router/node": "^7.1.5",
     "@react-router/serve": "^7.1.5",
+    "@vercel/react-router": "^1.0.2",
     "isbot": "^5.1.17",
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
