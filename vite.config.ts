@@ -5,4 +5,9 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  resolve: {
+    alias: {
+      "react-router-dom": "react-router",
+    },
+  },
 });
