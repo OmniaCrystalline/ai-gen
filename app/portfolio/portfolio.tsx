@@ -70,54 +70,41 @@ function Portfolio() {
   // Функція для отримання Open Graph мета-тегів
   const fetchOgData = useCallback(async (url: string) => {
     try {
-      // Використовуємо CORS проксі для обходу обмежень
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-      const response = await fetch(proxyUrl);
+      // Використовуємо наш серверний API endpoint для обходу CORS
+      const apiUrl = `/api/og?url=${encodeURIComponent(url)}`;
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        // Якщо помилка 404 або інша, просто не додаємо зображення
+        if (response.status === 404) {
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (data.contents) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, 'text/html');
+      // Перевіряємо, чи є помилка в відповіді
+      if (data.error) {
+        return;
+      }
 
-        const ogImage =
-          doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
-          doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content') ||
-          doc.querySelector('meta[property="og:image:url"]')?.getAttribute('content');
-
-        const ogTitle =
-          doc.querySelector('meta[property="og:title"]')?.getAttribute('content') ||
-          doc.querySelector('title')?.textContent;
-
-        const ogDescription =
-          doc.querySelector('meta[property="og:description"]')?.getAttribute('content') ||
-          doc.querySelector('meta[name="description"]')?.getAttribute('content');
-
-        if (ogImage) {
-          // Перетворюємо відносний URL на абсолютний
-          let imageUrl = ogImage;
-          if (ogImage.startsWith('/')) {
-            const urlObj = new URL(url);
-            imageUrl = `${urlObj.origin}${ogImage}`;
-          } else if (!ogImage.startsWith('http')) {
-            const urlObj = new URL(url);
-            imageUrl = `${urlObj.origin}/${ogImage}`;
-          }
-
-          setOgData(prev => {
-            // Перевіряємо, щоб уникнути дублікатів
-            if (prev[url]) return prev;
-            return {
-              ...prev,
-              [url]: {
-                image: imageUrl,
-                title: ogTitle || undefined,
-                description: ogDescription || undefined,
-              }
-            };
-          });
-        }
+      if (data.image) {
+        setOgData(prev => {
+          // Перевіряємо, щоб уникнути дублікатів
+          if (prev[url]) return prev;
+          return {
+            ...prev,
+            [url]: {
+              image: data.image,
+              title: data.title,
+              description: data.description,
+            }
+          };
+        });
       }
     } catch (error) {
+      // Тихо обробляємо помилки - просто не показуємо зображення
       console.error(`Error fetching OG data for ${url}:`, error);
     }
   }, []);
