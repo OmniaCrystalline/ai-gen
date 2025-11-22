@@ -101,7 +101,11 @@ function Portfolio() {
     try {
       // Використовуємо наш серверний API endpoint для отримання OG даних
       const apiUrl = `/api/og?url=${encodeURIComponent(url)}`;
-      const response = await fetch(apiUrl);
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         return;
@@ -315,24 +319,25 @@ function Portfolio() {
                 className="mb-4 sm:mb-6"
               >
                 <Card className="p-4 sm:p-6 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col bg-white dark:bg-gray-700">
-                  {ogData[repo.homepage]?.image && (
-                    <a
-                      href={repo.homepage}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mb-3 sm:mb-4 rounded-lg overflow-hidden block hover:opacity-90 transition-opacity"
-                    >
-                      <img
-                        src={ogData[repo.homepage].image}
-                        alt={ogData[repo.homepage].title || repo.name}
-                        className="w-full h-48 sm:h-56 object-cover"
-                        onError={(e) => {
-                          // Приховати зображення, якщо воно не завантажилось
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    </a>
-                  )}
+                  <a
+                    href={repo.homepage}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mb-3 sm:mb-4 rounded-lg overflow-hidden block hover:opacity-90 transition-opacity"
+                  >
+                    <img
+                      src={ogData[repo.homepage]?.image || "/placeholder.webp"}
+                      alt={ogData[repo.homepage]?.title || repo.name}
+                      className="w-full h-48 sm:h-56 object-cover"
+                      onError={(e) => {
+                        // Якщо OG зображення не завантажилось, показуємо placeholder
+                        const img = e.target as HTMLImageElement;
+                        if (!img.src.endsWith('/placeholder.webp')) {
+                          img.src = "/placeholder.webp";
+                        }
+                      }}
+                    />
+                  </a>
                   <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-900 dark:text-gray-100">
                     {repo.name}
                   </h3>

@@ -2,7 +2,7 @@ import type { Route } from "./+types/home";
 import Portfolio from "../portfolio/portfolio";
 
 const SITE_URL = "https://ai-gen-jade.vercel.app";
-const SITE_IMAGE = `${SITE_URL}/og-image.jpg`; // Додайте Open Graph зображення
+const SITE_IMAGE = `${SITE_URL}/portfolio.webp`; // Додайте Open Graph зображення
 
 export function meta({ }: Route.MetaArgs) {
   const title = "Vira Mospan - Full-Stack Developer | Portfolio";
@@ -18,7 +18,7 @@ export function meta({ }: Route.MetaArgs) {
       "https://github.com/OmniaCrystalline",
       "https://www.linkedin.com/in/vera-mospan/"
     ],
-    "email": "vp.mospan@gmail.com",
+    "email": "mospan.vira@gmail.com",
     "description": description,
     "knowsAbout": [
       "JavaScript",

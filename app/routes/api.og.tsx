@@ -66,6 +66,12 @@ async function getOgImage(url: string) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  // Перевіряємо, чи це запит до API (не HTML)
+  const accept = request.headers.get('accept') || '';
+  const isApiRequest = accept.includes('application/json') ||
+    accept.includes('*/*') ||
+    !accept.includes('text/html');
+
   try {
     const url = new URL(request.url);
     const targetUrl = url.searchParams.get('url');
@@ -113,8 +119,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 }
 
-// API route не потребує UI компонента
-export default function ApiOg() {
-  return null;
+// API route - повертаємо Response напряму, без рендерингу
+export async function action({ request }: Route.ActionArgs) {
+  return loader({ request } as Route.LoaderArgs);
 }
+
+// API route не потребує UI компонента - не експортуємо default
 
