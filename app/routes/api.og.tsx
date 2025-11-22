@@ -115,3 +115,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 }
 
+// API route не потребує UI компонента
+export default function ApiOg() {
+  return null;
+}
+
