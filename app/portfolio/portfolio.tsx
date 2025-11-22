@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, Button } from "@radix-ui/themes";
 import { Link } from "react-router";
 import { FaGithub, FaMailBulk, FaLinkedin, FaGlobe, FaSave } from "react-icons/fa";
+import Masonry from "react-masonry-css";
 
 
 
@@ -273,21 +274,30 @@ function Portfolio() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
-          {filteredRepos.length === 0 ? (
-            <p className="col-span-full text-center text-gray-600 dark:text-gray-400 py-8 text-sm sm:text-base">
-              Немає репозиторіїв, що відповідають фільтрам
-            </p>
-          ) : (
-            filteredRepos.map((repo) => (
+        {filteredRepos.length === 0 ? (
+          <p className="text-center text-gray-600 dark:text-gray-400 py-8 text-sm sm:text-base">
+            Немає репозиторіїв, що відповідають фільтрам
+          </p>
+        ) : (
+          <Masonry
+            breakpointCols={{
+              default: 2,
+              1024: 2,
+              768: 2,
+              640: 1,
+            }}
+            className="flex -ml-4 sm:-ml-6 w-auto"
+            columnClassName="pl-4 sm:pl-6 bg-clip-padding"
+          >
+            {filteredRepos.map((repo) => (
               <motion.div
                 key={repo.id}
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="h-full"
+                className="mb-4 sm:mb-6"
               >
-                <Card className="p-4 sm:p-6 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 h-full flex flex-col bg-white dark:bg-gray-700">
+                <Card className="p-4 sm:p-6 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col bg-white dark:bg-gray-700">
                   {ogData[repo.homepage]?.image && (
                     <a
                       href={repo.homepage}
@@ -349,9 +359,9 @@ function Portfolio() {
                   </div>
                 </Card>
               </motion.div>
-            ))
-          )}
-        </div>
+            ))}
+          </Masonry>
+        )}
       </section>
 
       <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sm:p-8">
