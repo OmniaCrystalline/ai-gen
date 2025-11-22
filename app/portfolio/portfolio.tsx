@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, Button } from "@radix-ui/themes";
 import { Link } from "react-router";
 import { FaGithub, FaMailBulk, FaLinkedin, FaGlobe, FaSave } from "react-icons/fa";
@@ -18,11 +18,18 @@ type Repo = {
   updated_at?: string;
 };
 
+type OgData = {
+  image?: string;
+  title?: string;
+  description?: string;
+};
+
 function Portfolio() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [filter, setFilter] = useState("");
   const [sortType, setSortType] = useState<keyof Repo>("updated_at");
   const [languageFilter, setLanguageFilter] = useState("");
+  const [ogData, setOgData] = useState<Record<string, OgData>>({});
 
   useEffect(() => {
     // Завантажуємо всі репозиторії з пагінацією
@@ -58,6 +65,76 @@ function Portfolio() {
 
     fetchAllRepos();
   }, []);
+
+  // Функція для отримання Open Graph мета-тегів
+  const fetchOgData = useCallback(async (url: string) => {
+    try {
+      // Використовуємо CORS проксі для обходу обмежень
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+      const data = await response.json();
+
+      if (data.contents) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+
+        const ogImage =
+          doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
+          doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content') ||
+          doc.querySelector('meta[property="og:image:url"]')?.getAttribute('content');
+
+        const ogTitle =
+          doc.querySelector('meta[property="og:title"]')?.getAttribute('content') ||
+          doc.querySelector('title')?.textContent;
+
+        const ogDescription =
+          doc.querySelector('meta[property="og:description"]')?.getAttribute('content') ||
+          doc.querySelector('meta[name="description"]')?.getAttribute('content');
+
+        if (ogImage) {
+          // Перетворюємо відносний URL на абсолютний
+          let imageUrl = ogImage;
+          if (ogImage.startsWith('/')) {
+            const urlObj = new URL(url);
+            imageUrl = `${urlObj.origin}${ogImage}`;
+          } else if (!ogImage.startsWith('http')) {
+            const urlObj = new URL(url);
+            imageUrl = `${urlObj.origin}/${ogImage}`;
+          }
+
+          setOgData(prev => {
+            // Перевіряємо, щоб уникнути дублікатів
+            if (prev[url]) return prev;
+            return {
+              ...prev,
+              [url]: {
+                image: imageUrl,
+                title: ogTitle || undefined,
+                description: ogDescription || undefined,
+              }
+            };
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching OG data for ${url}:`, error);
+    }
+  }, []);
+
+  // Завантажуємо OG дані для всіх репозиторіїв з homepage
+  useEffect(() => {
+    repos.forEach(repo => {
+      if (repo.homepage && repo.homepage.trim() !== "") {
+        setOgData(prev => {
+          // Перевіряємо, чи вже завантажено
+          if (prev[repo.homepage]) return prev;
+          // Завантажуємо OG дані
+          fetchOgData(repo.homepage);
+          return prev;
+        });
+      }
+    });
+  }, [repos, fetchOgData]);
 
 
   const filteredRepos = repos
@@ -211,6 +288,24 @@ function Portfolio() {
                 className="h-full"
               >
                 <Card className="p-4 sm:p-6 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 h-full flex flex-col bg-white dark:bg-gray-700">
+                  {ogData[repo.homepage]?.image && (
+                    <a
+                      href={repo.homepage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mb-3 sm:mb-4 rounded-lg overflow-hidden block hover:opacity-90 transition-opacity"
+                    >
+                      <img
+                        src={ogData[repo.homepage].image}
+                        alt={ogData[repo.homepage].title || repo.name}
+                        className="w-full h-48 sm:h-56 object-cover"
+                        onError={(e) => {
+                          // Приховати зображення, якщо воно не завантажилось
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </a>
+                  )}
                   <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-900 dark:text-gray-100">
                     {repo.name}
                   </h3>
