@@ -1,5 +1,6 @@
 import type { Route } from "./+types/api.og";
-import { parse } from "node-html-parser";
+import axios from "axios";
+import { load } from "cheerio";
 
 // Функція для створення JSON Response
 function jsonResponse(data: any, status: number = 200) {
@@ -11,46 +12,30 @@ function jsonResponse(data: any, status: number = 200) {
   });
 }
 
-// Функція для отримання OG мета-тегів з URL з timeout
-async function fetchOgData(url: string) {
+// Функція для отримання OG мета-тегів з URL
+async function getOgImage(url: string) {
   try {
-    // Додаємо timeout для fetch
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд timeout
-
-    const response = await fetch(url, {
+    const { data } = await axios.get(url, {
+      timeout: 10000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
-      signal: controller.signal,
     });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      return null;
-    }
-    
-    const html = await response.text();
-    
-    if (!html || html.length === 0) {
-      return null;
-    }
-    
-    const doc = parse(html);
-    
-    const ogImage = 
-      doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
-      doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content') ||
-      doc.querySelector('meta[property="og:image:url"]')?.getAttribute('content');
-    
-    const ogTitle = 
-      doc.querySelector('meta[property="og:title"]')?.getAttribute('content') ||
-      doc.querySelector('title')?.textContent;
-    
-    const ogDescription = 
-      doc.querySelector('meta[property="og:description"]')?.getAttribute('content') ||
-      doc.querySelector('meta[name="description"]')?.getAttribute('content');
+
+    const $ = load(data);
+
+    const ogImage =
+      $('meta[property="og:image"]').attr('content') ||
+      $('meta[name="twitter:image"]').attr('content') ||
+      $('meta[property="og:image:url"]').attr('content');
+
+    const ogTitle =
+      $('meta[property="og:title"]').attr('content') ||
+      $('title').text();
+
+    const ogDescription =
+      $('meta[property="og:description"]').attr('content') ||
+      $('meta[name="description"]').attr('content');
 
     if (ogImage) {
       // Перетворюємо відносний URL на абсолютний
@@ -69,11 +54,11 @@ async function fetchOgData(url: string) {
         description: ogDescription || undefined,
       };
     }
-    
+
     return null;
   } catch (error) {
     // Тихо обробляємо помилки
-    if (error instanceof Error && error.name !== 'AbortError') {
+    if (error instanceof Error) {
       console.error(`Error fetching OG data for ${url}:`, error.message);
     }
     return null;
@@ -84,7 +69,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   try {
     const url = new URL(request.url);
     const targetUrl = url.searchParams.get('url');
-    
+
     if (!targetUrl) {
       return jsonResponse({ error: 'URL parameter is required' }, 400);
     }
@@ -102,8 +87,21 @@ export async function loader({ request }: Route.LoaderArgs) {
       return jsonResponse({ error: 'Only HTTP and HTTPS URLs are allowed' }, 400);
     }
 
-    const ogData = await fetchOgData(targetUrl);
-    
+    // Блокуємо localhost та невалідні домени
+    const hostname = validatedUrl.hostname.toLowerCase();
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0' ||
+      hostname.includes('localhost') ||
+      hostname === 'nda' ||
+      !hostname.includes('.') // Блокуємо домени без крапки (наприклад, просто "NDA")
+    ) {
+      return jsonResponse({ error: 'Invalid or blocked hostname' }, 400);
+    }
+
+    const ogData = await getOgImage(targetUrl);
+
     if (!ogData) {
       return jsonResponse({ error: 'No OG data found' }, 404);
     }

@@ -47,17 +47,31 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  // Ігноруємо помилки для .well-known маршрутів (Chrome DevTools)
+  if (error instanceof Error && error.message.includes('.well-known')) {
+    return null;
+  }
+
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
+    // Ігноруємо 404 для .well-known маршрутів
+    if (error.status === 404 && error.data?.pathname?.includes('.well-known')) {
+      return null;
+    }
+    
     message = error.status === 404 ? "404" : "Error";
     details =
       error.status === 404
         ? "The requested page could not be found."
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
+    // Не показуємо помилки для .well-known в dev режимі
+    if (error.message.includes('.well-known')) {
+      return null;
+    }
     details = error.message;
     stack = error.stack;
   }

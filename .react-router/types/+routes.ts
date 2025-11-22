@@ -17,12 +17,17 @@ type Pages = {
   "/api/og": {
     params: {};
   };
+  "/.well-known/*": {
+    params: {
+      "*": string;
+    };
+  };
 };
 
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/api/og";
+    page: "/" | "/api/og" | "/.well-known/*";
   };
   "routes/home.tsx": {
     id: "routes/home";
@@ -32,10 +37,15 @@ type RouteFiles = {
     id: "routes/api.og";
     page: "/api/og";
   };
+  "routes/well-known.$.tsx": {
+    id: "routes/well-known.$";
+    page: "/.well-known/*";
+  };
 };
 
 type RouteModules = {
   "root": typeof import("./app/root.tsx");
   "routes/home": typeof import("./app/routes/home.tsx");
   "routes/api.og": typeof import("./app/routes/api.og.tsx");
+  "routes/well-known.$": typeof import("./app/routes/well-known.$.tsx");
 };

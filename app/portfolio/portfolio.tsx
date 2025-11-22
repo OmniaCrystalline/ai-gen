@@ -67,19 +67,49 @@ function Portfolio() {
     fetchAllRepos();
   }, []);
 
-  // Функція для отримання Open Graph мета-тегів
-  const fetchOgData = useCallback(async (url: string) => {
+  // Функція для валідації URL
+  const isValidUrl = (urlString: string): boolean => {
     try {
-      // Використовуємо наш серверний API endpoint для обходу CORS
+      const url = new URL(urlString);
+      const hostname = url.hostname.toLowerCase();
+
+      // Блокуємо localhost, невалідні домени та домени без крапки
+      if (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '0.0.0.0' ||
+        hostname.includes('localhost') ||
+        hostname === 'nda' ||
+        !hostname.includes('.')
+      ) {
+        return false;
+      }
+
+      return ['http:', 'https:'].includes(url.protocol);
+    } catch {
+      return false;
+    }
+  };
+
+  // Функція для отримання Open Graph мета-тегів через API
+  const fetchOgData = useCallback(async (url: string) => {
+    // Перевіряємо валідність URL перед запитом
+    if (!isValidUrl(url)) {
+      return;
+    }
+
+    try {
+      // Використовуємо наш серверний API endpoint для отримання OG даних
       const apiUrl = `/api/og?url=${encodeURIComponent(url)}`;
       const response = await fetch(apiUrl);
 
       if (!response.ok) {
-        // Якщо помилка 404 або інша, просто не додаємо зображення
-        if (response.status === 404) {
-          return;
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        return;
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        return;
       }
 
       const data = await response.json();
